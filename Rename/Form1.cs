@@ -19,11 +19,9 @@ namespace Rename
 
         public MainForm()
         {
-            InitializeComponent();            
-            
-            
-            // заполняем дерево дисками
-            FillDriveNodes();
+            InitializeComponent();
+            DriveTreeInit();
+
         }       
        
         private void MainForm_Load(object sender, EventArgs e)
@@ -114,25 +112,8 @@ namespace Rename
             }
             ShowInfoInListView(lwShowInfoWin1, lblPathWin1.Text);
             ShowInfoInListView(lwShowInfoWin2, lblPathWin2.Text);
-        }
-
-        //Открыть диск С Win1
-        private void btnDir_C_Click(object sender, EventArgs e)
-        {
-            ShowInfoInListView(lwShowInfoWin1, @"C:\");
-        }
-
-        //Открыть диск D Win1
-        private void btnDir_D_Click(object sender, EventArgs e)
-        {
-            ShowInfoInListView(lwShowInfoWin1, @"D:\");
-        }
-
-        //Открыть диск Е Win1
-        private void btnDir_E_Click(object sender, EventArgs e)
-        {
-            ShowInfoInListView(lwShowInfoWin1, @"E:\");
-        }
+        }        
+        
         //Открыть диск С Win2
         private void btnDir_C_Win2_Click(object sender, EventArgs e)
         {
@@ -201,6 +182,7 @@ namespace Rename
                 lblPathWin1.Text = path;
             else
                 lblPathWin2.Text = path;
+            lv.Sort();
             return lv;
         }
 
@@ -223,32 +205,35 @@ namespace Rename
                         Directory.Delete(Path.Combine(path, lv.SelectedItems[0].Text), true);                     
                 }
             }
-        }
-
-        private void lwShowInfoWin1_MouseClick_1(object sender, MouseEventArgs e)
-        {
-            index = lwShowInfoWin1.SelectedItems[0].Text;
-        }
-        private void lwShowInfoWin2_MouseClick(object sender, MouseEventArgs e)
-        {
-            index2 = lwShowInfoWin2.SelectedItems[0].Text;
         }        
-        
-        // получаем все диски на компьютере
-        private void FillDriveNodes()
-        {
-            try
-            {
-                foreach (DriveInfo drive in DriveInfo.GetDrives())
-                {
-                    TreeNode driveNode = new TreeNode { Text = drive.Name };
-                    
-                    treeView1.Nodes.Add(driveNode);
-                }
-            }
-            catch (Exception ex) { }
-        }                
 
+        public void DriveTreeInit()
+        {
+            string[] drivesArray = Directory.GetLogicalDrives();
+
+            treeView1.BeginUpdate();
+            treeView1.Nodes.Clear();
+
+            foreach (string s in drivesArray)
+            {
+                TreeNode drive = new TreeNode(s, 0, 0);
+                treeView1.Nodes.Add(drive);    
+                            
+            }
+            treeView1.EndUpdate();
+        }
+
+        private void lwShowInfoWin1_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            this.lwShowInfoWin1.ListViewItemSorter = new ListViewColumnComparer(e.Column);
+        }
+
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            TreeNode selectedNode = e.Node;
+            string fullPath = selectedNode.FullPath;
+            ShowInfoInListView(lwShowInfoWin1, fullPath);            
+        }                
     }
 }
 
